@@ -1,0 +1,1056 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { 
+  Search, ShoppingCart, User, Heart, Settings, Menu, X, 
+  ChevronRight, ArrowRight, Watch as WatchIcon, Package, 
+  CheckCircle, LogOut, MessageCircle, Send, Star, Filter, TrendingUp
+} from 'lucide-react';
+
+// --- SEED DATA ---
+const ADMIN_CREDENTIALS = {
+  username: 'ramazan.omar',
+  password: 'Aiym0303!'
+};
+
+const SEED_WATCHES = [
+  { id: '1', name: 'Submariner Date', brand: 'Rolex', model: '126610LN', price: 6500000, description: 'The ultimate dive watch. Precision, durability, and luxury.', image: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'luxury', stock: 5, rating: 5.0 },
+  { id: '2', name: 'Royal Oak Selfwinding', brand: 'Audemars Piguet', model: '15500ST', price: 18000000, description: 'Iconic octagonal bezel, "Grande Tapisserie" dial.', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'luxury', stock: 2, rating: 4.9 },
+  { id: '3', name: 'Nautilus', brand: 'Patek Philippe', model: '5711/1A', price: 35000000, description: 'The elegant sports watch in steel.', image: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'luxury', stock: 1, rating: 5.0 },
+  { id: '4', name: 'Speedmaster Professional', brand: 'Omega', model: 'Moonwatch', price: 3200000, description: 'The first watch worn on the moon.', image: 'https://images.unsplash.com/photo-1587836374828-cb4387061d1c?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'mechanical', stock: 10, rating: 4.8 },
+  { id: '5', name: 'Tank Must', brand: 'Cartier', model: 'WSTA0041', price: 1500000, description: 'A symbol of elegance and timeless design.', image: 'https://images.unsplash.com/photo-1622434641406-a158123450f9?auto=format&fit=crop&w=600&q=80', gender: 'female', type: 'luxury', stock: 8, rating: 4.7 },
+  { id: '6', name: 'Datejust 36', brand: 'Rolex', model: '126234', price: 4800000, description: 'Classic and versatile with fluted bezel.', image: 'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=600&q=80', gender: 'unisex', type: 'luxury', stock: 4, rating: 4.9 },
+  { id: '7', name: 'G-Shock Master of G', brand: 'Casio', model: 'GWG-1000', price: 450000, description: 'Tough, rugged, and built for extreme conditions.', image: 'https://images.unsplash.com/photo-1549972574-87cc92dd1c8d?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'digital', stock: 20, rating: 4.6 },
+  { id: '8', name: 'Apple Watch Ultra 2', brand: 'Apple', model: 'Ultra 2', price: 420000, description: 'The ultimate smartwatch for extreme athletes.', image: 'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?auto=format&fit=crop&w=600&q=80', gender: 'unisex', type: 'digital', stock: 30, rating: 4.8 },
+  { id: '9', name: 'Fenix 7X Sapphire', brand: 'Garmin', model: '7X', price: 550000, description: 'Premium multisport GPS watch.', image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'sport', stock: 15, rating: 4.7 },
+  { id: '10', name: 'Presage Cocktail Time', brand: 'Seiko', model: 'SRPB41', price: 250000, description: 'Stunning dial inspired by cocktail bars.', image: 'https://images.unsplash.com/photo-1610304381711-209bfb5e7d5d?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'mechanical', stock: 12, rating: 4.5 },
+  { id: '11', name: 'Serpenti Tubogas', brand: 'Bulgari', model: '101817', price: 4200000, description: 'Wraps around the wrist like a snake. Pure luxury.', image: 'https://images.unsplash.com/photo-1594534432924-d27e7f60037a?auto=format&fit=crop&w=600&q=80', gender: 'female', type: 'luxury', stock: 3, rating: 4.8 },
+  { id: '12', name: 'Happy Diamonds', brand: 'Chopard', model: '209429-5104', price: 5600000, description: 'Dancing diamonds inside the dial.', image: 'https://images.unsplash.com/photo-1605348532760-6753d2c43329?auto=format&fit=crop&w=600&q=80', gender: 'female', type: 'luxury', stock: 2, rating: 4.9 },
+  { id: '13', name: 'Carrera Chronograph', brand: 'TAG Heuer', model: 'CBN2010', price: 2800000, description: 'Motor-racing inspired elegant chronograph.', image: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'sport', stock: 6, rating: 4.6 },
+  { id: '14', name: 'Le Locle Powermatic 80', brand: 'Tissot', model: 'T006.407', price: 320000, description: 'Classic Swiss automatic with 80h power reserve.', image: 'https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'mechanical', stock: 18, rating: 4.5 },
+  { id: '15', name: 'Classic Petite Melrose', brand: 'Daniel Wellington', model: 'DW00100163', price: 95000, description: 'Minimalist rose gold mesh watch.', image: 'https://images.unsplash.com/photo-1501162946741-4960f913fbf2?auto=format&fit=crop&w=600&q=80', gender: 'female', type: 'casual', stock: 40, rating: 4.3 },
+  { id: '16', name: 'Weekender Chronograph', brand: 'Timex', model: 'TW2P62300', price: 45000, description: 'Everyday casual chronograph watch.', image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80', gender: 'unisex', type: 'casual', stock: 50, rating: 4.2 },
+  { id: '17', name: 'Bambino Version 4', brand: 'Orient', model: 'FAC08004D0', price: 120000, description: 'Beautiful domed crystal mechanical dress watch.', image: 'https://images.unsplash.com/photo-1610305315410-621f3f4514ba?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'mechanical', stock: 25, rating: 4.6 },
+  { id: '18', name: 'Black Bay Fifty-Eight', brand: 'Tudor', model: 'M79030N', price: 1900000, description: 'Vintage inspired dive watch perfection.', image: 'https://images.unsplash.com/photo-1585123334904-845d60e97b29?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'sport', stock: 7, rating: 4.8 },
+  { id: '19', name: 'Defy Skyline', brand: 'Zenith', model: '03.9300.3620', price: 4100000, description: 'High-frequency automatic movement.', image: 'https://images.unsplash.com/photo-1623998021446-45cd9b269056?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'luxury', stock: 4, rating: 4.7 },
+  { id: '20', name: 'Rendez-Vous Dazzling', brand: 'Jaeger-LeCoultre', model: 'Q3432570', price: 12000000, description: 'Exquisite jewelry watch with diamonds.', image: 'https://images.unsplash.com/photo-1604242692760-2f7b0c26856d?auto=format&fit=crop&w=600&q=80', gender: 'female', type: 'luxury', stock: 1, rating: 5.0 },
+  { id: '21', name: 'G-Shock CasiOak', brand: 'Casio', model: 'GA-2100', price: 75000, description: 'Slimest G-Shock with octagonal bezel.', image: 'https://images.unsplash.com/photo-1549972574-87cc92dd1c8d?auto=format&fit=crop&w=600&q=80', gender: 'unisex', type: 'digital', stock: 35, rating: 4.8 },
+  { id: '22', name: 'Suunto 9 Baro', brand: 'Suunto', model: 'SS050145000', price: 320000, description: 'Endurance GPS watch with long battery life.', image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'sport', stock: 12, rating: 4.5 },
+  { id: '23', name: 'Apple Watch Series 9', brand: 'Apple', model: 'Series 9', price: 250000, description: 'The essential smartwatch for health and connection.', image: 'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?auto=format&fit=crop&w=600&q=80', gender: 'unisex', type: 'digital', stock: 45, rating: 4.8 },
+  { id: '24', name: 'Seamaster Diver 300M', brand: 'Omega', model: '210.30', price: 2800000, description: 'James Bond\'s choice. Master Chronometer.', image: 'https://images.unsplash.com/photo-1587836374828-cb4387061d1c?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'luxury', stock: 9, rating: 4.9 },
+  { id: '25', name: 'Luminor Marina', brand: 'Panerai', model: 'PAM01312', price: 3900000, description: 'Bold Italian design, Swiss mechanics.', image: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'mechanical', stock: 5, rating: 4.6 },
+  { id: '26', name: 'Big Bang Integrated', brand: 'Hublot', model: '451.NX', price: 10500000, description: 'Art of fusion in titanium.', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'luxury', stock: 2, rating: 4.4 },
+  { id: '27', name: 'Altiplano Ultimate', brand: 'Piaget', model: 'G0A45123', price: 14000000, description: 'One of the thinnest mechanical watches in the world.', image: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=600&q=80', gender: 'unisex', type: 'luxury', stock: 1, rating: 4.9 },
+  { id: '28', name: 'Constellation Manhattan', brand: 'Omega', model: '131.10', price: 3100000, description: 'Iconic claws design for women.', image: 'https://images.unsplash.com/photo-1622434641406-a158123450f9?auto=format&fit=crop&w=600&q=80', gender: 'female', type: 'luxury', stock: 6, rating: 4.7 },
+  { id: '29', name: 'PRX Powermatic 80', brand: 'Tissot', model: 'T137.407', price: 350000, description: '70s retro-chic design with integrated bracelet.', image: 'https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'casual', stock: 22, rating: 4.8 },
+  { id: '30', name: 'Khaki Field Mechanical', brand: 'Hamilton', model: 'H69439931', price: 280000, description: 'Original military spec watch.', image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80', gender: 'male', type: 'mechanical', stock: 15, rating: 4.6 }
+];
+
+// --- MAIN APP COMPONENT ---
+export default function App() {
+  const [theme, setTheme] = useState('dark');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [watches, setWatches] = useState(SEED_WATCHES);
+  const [cart, setCart] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [orders, setOrders] = useState([]);
+  
+  // Navigation State
+  const [currentView, setCurrentView] = useState('home'); // home, shop, product, cart, checkout, profile, admin, about
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  
+  // Modals
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  // Users DB Mock
+  const [usersDb, setUsersDb] = useState([]);
+
+  // Init App Settings
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+
+  // Helpers
+  const formatPrice = (price) => new Intl.NumberFormat('kk-KZ', { style: 'currency', currency: 'KZT', maximumFractionDigits: 0 }).format(price);
+
+  const navigateTo = (view, data = null) => {
+    setCurrentView(view);
+    if (data) setSelectedProduct(data);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAddToCart = (watch) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === watch.id);
+      if (existing) {
+        return prev.map(item => item.id === watch.id ? { ...item, quantity: item.quantity + 1 } : item);
+      }
+      return [...prev, { ...watch, quantity: 1 }];
+    });
+    alert('Себетке қосылды!');
+  };
+
+  const toggleFavorite = (watch) => {
+    setFavorites(prev => {
+      if (prev.find(item => item.id === watch.id)) {
+        return prev.filter(item => item.id !== watch.id);
+      }
+      return [...prev, watch];
+    });
+  };
+
+  // --- COMPONENTS ---
+
+  const AuthModal = () => {
+    const [isLogin, setIsLogin] = useState(true);
+    const [formData, setFormData] = useState({ name: '', phone: '', email: '', password: '' });
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      if (isLogin) {
+        if ((formData.email === ADMIN_CREDENTIALS.username || formData.email === 'admin') && formData.password === ADMIN_CREDENTIALS.password) {
+          setCurrentUser({ id: 'admin-1', name: 'Ramazan Omar', email: formData.email, role: 'admin' });
+          setIsAuthModalOpen(false);
+        } else {
+          // Mock login user
+          setCurrentUser({ id: Date.now().toString(), name: formData.email.split('@')[0], email: formData.email, role: 'user' });
+          setIsAuthModalOpen(false);
+        }
+      } else {
+        // Mock register
+        const newUser = { id: Date.now().toString(), name: formData.name, email: formData.email, phone: formData.phone, role: 'user' };
+        setUsersDb([...usersDb, newUser]);
+        setCurrentUser(newUser);
+        setIsAuthModalOpen(false);
+      }
+    };
+
+    if (!isAuthModalOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div className="bg-white dark:bg-[#111] p-8 rounded-2xl w-full max-w-md shadow-2xl border border-gray-200 dark:border-white/10 relative">
+          <button onClick={() => setIsAuthModalOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white"><X size={24}/></button>
+          <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white text-center font-serif">{isLogin ? 'Кіру' : 'Тіркелу'}</h2>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <>
+                <input type="text" placeholder="Аты-жөні" required value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full p-3 rounded-xl bg-gray-100 dark:bg-black border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-yellow-500 transition-colors" />
+                <input type="tel" placeholder="Телефон нөмірі" required value={formData.phone} onChange={e=>setFormData({...formData, phone: e.target.value})} className="w-full p-3 rounded-xl bg-gray-100 dark:bg-black border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-yellow-500 transition-colors" />
+              </>
+            )}
+            <input type="text" placeholder="Email немесе Login" required value={formData.email} onChange={e=>setFormData({...formData, email: e.target.value})} className="w-full p-3 rounded-xl bg-gray-100 dark:bg-black border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-yellow-500 transition-colors" />
+            <input type="password" placeholder="Құпия сөз" required value={formData.password} onChange={e=>setFormData({...formData, password: e.target.value})} className="w-full p-3 rounded-xl bg-gray-100 dark:bg-black border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-yellow-500 transition-colors" />
+            
+            <button type="submit" className="w-full py-4 rounded-xl bg-black dark:bg-white text-white dark:text-black font-semibold hover:bg-yellow-600 dark:hover:bg-yellow-500 transition-all duration-300 uppercase tracking-widest text-sm">
+              {isLogin ? 'Кіру' : 'Тіркелу'}
+            </button>
+          </form>
+          
+          <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+            {isLogin ? 'Аккаунтыңыз жоқ па?' : 'Аккаунтыңыз бар ма?'} 
+            <button onClick={() => setIsLogin(!isLogin)} className="ml-2 text-yellow-600 dark:text-yellow-500 hover:underline">
+              {isLogin ? 'Жаңадан ашу' : 'Жүйеге кіру'}
+            </button>
+          </p>
+
+          <div className="mt-4 p-4 bg-gray-100 dark:bg-white/5 rounded-lg text-xs text-gray-500 dark:text-gray-400">
+            <strong>Тест үшін:</strong> <br/>Admin Login: ramazan.omar<br/>Pass: Aiym0303!
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const AIChatbot = () => {
+    const [messages, setMessages] = useState([{ sender: 'ai', text: 'Сәлеметсіз бе! Мен RisaWatch AI ассистентімін. Сізге қандай сағат таңдауға көмектесе аламын?' }]);
+    const [input, setInput] = useState('');
+
+    const handleSend = () => {
+      if(!input.trim()) return;
+      setMessages([...messages, { sender: 'user', text: input }]);
+      setInput('');
+      
+      // Mock AI response
+      setTimeout(() => {
+        let reply = "Кешіріңіз, түсінбедім.";
+        const lowerInput = input.toLowerCase();
+        if(lowerInput.includes('rolex') || lowerInput.includes('ролекс')) reply = "Rolex - бұл статус пен сапаның символы. Бізде Submariner және Datejust модельдері бар. Каталогтан көре аласыз ба?";
+        else if(lowerInput.includes('арзан') || lowerInput.includes('бюджет')) reply = "Күнделікті қолданысқа Casio G-Shock немесе Daniel Wellington сағаттарын ұсынамын. Олар төзімді әрі қолжетімді.";
+        else if(lowerInput.includes('әйел')) reply = "Әйелдерге арналған керемет Cartier Tank немесе Chopard Happy Diamonds үлгілері бар. Олар кез келген образды толықтырады.";
+        else reply = "Керемет таңдау! Біздің 'Дүкен' бөліміне өтіп, сүзгілерді (фильтр) қолданып көріңіз. Тағы қандай сұрақтарыңыз бар?";
+        
+        setMessages(prev => [...prev, { sender: 'ai', text: reply }]);
+      }, 1000);
+    };
+
+    if (!isChatOpen) {
+      return (
+        <button onClick={() => setIsChatOpen(true)} className="fixed bottom-6 right-6 p-4 bg-yellow-600 hover:bg-yellow-500 text-white rounded-full shadow-2xl transition-transform hover:scale-110 z-40">
+          <MessageCircle size={28} />
+        </button>
+      );
+    }
+
+    return (
+      <div className="fixed bottom-6 right-6 w-80 md:w-96 bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 z-50 overflow-hidden flex flex-col h-[500px]">
+        <div className="p-4 bg-black dark:bg-black text-white flex justify-between items-center border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <WatchIcon size={20} className="text-yellow-500" />
+            <span className="font-semibold">RisaWatch AI</span>
+          </div>
+          <button onClick={() => setIsChatOpen(false)} className="text-gray-400 hover:text-white"><X size={20}/></button>
+        </div>
+        
+        <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50 dark:bg-transparent">
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${m.sender === 'user' ? 'bg-yellow-600 text-white rounded-br-none' : 'bg-gray-200 dark:bg-[#2a2a2a] text-gray-900 dark:text-gray-100 rounded-bl-none'}`}>
+                {m.text}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="p-4 border-t border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a] flex gap-2">
+          <input 
+            type="text" 
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Сұрағыңызды жазыңыз..." 
+            className="flex-1 bg-gray-100 dark:bg-black rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500 text-gray-900 dark:text-white"
+          />
+          <button onClick={handleSend} className="p-2 bg-yellow-600 text-white rounded-full hover:bg-yellow-500 transition-colors">
+            <Send size={18} />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const Navbar = () => (
+    <nav className="fixed w-full z-40 top-0 transition-all duration-300 bg-white/80 dark:bg-black/60 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigateTo('home')}>
+            <div className="w-8 h-8 rounded-full bg-black dark:bg-white flex items-center justify-center">
+              <WatchIcon size={20} className="text-white dark:text-black" />
+            </div>
+            <span className="text-2xl font-serif font-bold tracking-widest text-black dark:text-white uppercase">RisaWatch</span>
+          </div>
+
+          <div className="hidden md:flex space-x-8">
+            <button onClick={() => navigateTo('home')} className={`text-sm tracking-widest uppercase hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors ${currentView === 'home' ? 'text-yellow-600 dark:text-yellow-500' : 'text-gray-600 dark:text-gray-300'}`}>Басты бет</button>
+            <button onClick={() => navigateTo('shop')} className={`text-sm tracking-widest uppercase hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors ${currentView === 'shop' ? 'text-yellow-600 dark:text-yellow-500' : 'text-gray-600 dark:text-gray-300'}`}>Дүкен</button>
+            <button onClick={() => navigateTo('about')} className={`text-sm tracking-widest uppercase hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors ${currentView === 'about' ? 'text-yellow-600 dark:text-yellow-500' : 'text-gray-600 dark:text-gray-300'}`}>Біз туралы</button>
+          </div>
+
+          <div className="flex items-center space-x-4 sm:space-x-6">
+            <button className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors" onClick={() => navigateTo('shop')}>
+              <Search size={20} />
+            </button>
+            
+            <button onClick={() => { if(!currentUser) setIsAuthModalOpen(true); else navigateTo(currentUser.role === 'admin' ? 'admin' : 'profile'); }} className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">
+              {currentUser && currentUser.role === 'admin' ? <Settings size={20} className="text-yellow-600"/> : <User size={20} />}
+            </button>
+
+            <button onClick={() => navigateTo('cart')} className="relative text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">
+              <ShoppingCart size={20} />
+              {cart.length > 0 && <span className="absolute -top-2 -right-2 bg-yellow-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{cart.length}</span>}
+            </button>
+
+            <div className="w-px h-6 bg-gray-300 dark:bg-white/20 hidden sm:block"></div>
+            
+            <button onClick={toggleTheme} className="text-xs uppercase tracking-widest font-semibold text-gray-500 hover:text-black dark:hover:text-white hidden sm:block">
+              {theme === 'dark' ? 'Light' : 'Dark'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+
+  const Hero = () => (
+    <div className="relative h-screen flex items-center justify-center overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <img src="https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=1920&q=80" alt="Luxury Background" className="w-full h-full object-cover opacity-60 dark:opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-transparent to-transparent dark:from-black dark:via-black/50 dark:to-transparent"></div>
+      </div>
+      
+      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
+        <span className="text-yellow-600 dark:text-yellow-500 uppercase tracking-[0.3em] text-sm font-semibold mb-4 block">Жаңа Коллекция</span>
+        <h1 className="text-5xl md:text-7xl font-serif font-bold text-black dark:text-white mb-6 leading-tight">
+          Уақытқа <br className="hidden md:block"/> Билік Ет
+        </h1>
+        <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-10 max-w-2xl font-light">
+          RisaWatch - әлемге әйгілі премиум сағаттар әлемі. Стиль, сапа және мәртебе бір жерде.
+        </p>
+        <button onClick={() => navigateTo('shop')} className="group flex items-center gap-4 bg-black dark:bg-white text-white dark:text-black px-8 py-4 rounded-full font-semibold uppercase tracking-widest hover:scale-105 transition-all duration-300 shadow-xl">
+          Сатып алу
+          <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+        </button>
+      </div>
+    </div>
+  );
+
+  const ProductCard = ({ watch }) => {
+    const isFav = favorites.some(f => f.id === watch.id);
+    
+    return (
+      <div className="group relative bg-white dark:bg-[#111] rounded-2xl overflow-hidden shadow-lg border border-gray-100 dark:border-white/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-yellow-500/10 cursor-pointer flex flex-col h-full" onClick={() => navigateTo('product', watch)}>
+        <div className="relative h-72 overflow-hidden bg-gray-50 dark:bg-black flex items-center justify-center p-6">
+          <img src={watch.image} alt={watch.name} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl" />
+          
+          <button 
+            onClick={(e) => { e.stopPropagation(); toggleFavorite(watch); }}
+            className="absolute top-4 right-4 p-2 bg-white/50 dark:bg-black/50 backdrop-blur-md rounded-full text-gray-400 hover:text-red-500 transition-colors z-10"
+          >
+            <Heart size={20} fill={isFav ? "currentColor" : "none"} className={isFav ? "text-red-500" : ""} />
+          </button>
+
+          <div className="absolute top-4 left-4 bg-black/80 dark:bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] uppercase tracking-wider text-white dark:text-black font-semibold">
+            {watch.brand}
+          </div>
+        </div>
+        
+        <div className="p-6 flex flex-col flex-1">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1 group-hover:text-yellow-600 dark:group-hover:text-yellow-500 transition-colors truncate">{watch.name}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 truncate">{watch.model}</p>
+          <div className="mt-auto flex justify-between items-center">
+            <span className="text-lg font-semibold text-black dark:text-white">{formatPrice(watch.price)}</span>
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleAddToCart(watch); }}
+              className="p-3 bg-gray-100 dark:bg-[#222] hover:bg-yellow-500 hover:text-white dark:hover:bg-yellow-500 rounded-xl transition-colors text-gray-900 dark:text-white"
+            >
+              <ShoppingCart size={20} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const HomeView = () => (
+    <div className="pb-20">
+      <Hero />
+      
+      {/* Featured Section */}
+      <section className="py-24 px-4 max-w-7xl mx-auto">
+        <div className="flex justify-between items-end mb-12">
+          <div>
+            <span className="text-yellow-600 font-semibold tracking-widest uppercase text-sm mb-2 block">Таңдаулы</span>
+            <h2 className="text-3xl md:text-5xl font-serif font-bold text-black dark:text-white">Трендтегі Сағаттар</h2>
+          </div>
+          <button onClick={() => navigateTo('shop')} className="hidden md:flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-gray-500 hover:text-black dark:hover:text-white transition-colors">
+            Барлығын көру <ChevronRight size={16} />
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {watches.slice(0, 8).map(w => <ProductCard key={w.id} watch={w} />)}
+        </div>
+        
+        <button onClick={() => navigateTo('shop')} className="w-full mt-8 md:hidden py-4 border border-gray-300 dark:border-white/20 rounded-xl text-center uppercase tracking-widest text-sm font-semibold text-black dark:text-white">
+          Барлығын көру
+        </button>
+      </section>
+
+      {/* Categories Banner */}
+      <section className="py-12 bg-gray-900 dark:bg-[#0a0a0a] text-white my-12">
+        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { title: "Ерлерге арналған", img: "https://images.unsplash.com/photo-1622434641406-a158123450f9?auto=format&fit=crop&w=400&q=80", filter: 'male' },
+            { title: "Әйелдерге арналған", img: "https://images.unsplash.com/photo-1594534432924-d27e7f60037a?auto=format&fit=crop&w=400&q=80", filter: 'female' },
+            { title: "Спорттық стиль", img: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=400&q=80", filter: 'sport' }
+          ].map((cat, idx) => (
+            <div key={idx} className="relative h-64 rounded-2xl overflow-hidden group cursor-pointer" onClick={() => navigateTo('shop')}>
+              <img src={cat.img} alt={cat.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
+                <div>
+                  <h3 className="text-2xl font-serif font-bold mb-2">{cat.title}</h3>
+                  <span className="text-yellow-500 text-sm uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-2 transition-transform">
+                    Қарау <ArrowRight size={16}/>
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+
+  const ShopView = () => {
+    const [filterGender, setFilterGender] = useState('all');
+    const [filterType, setFilterType] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const filteredWatches = useMemo(() => {
+      return watches.filter(w => {
+        const matchGender = filterGender === 'all' || w.gender === filterGender;
+        const matchType = filterType === 'all' || w.type === filterType;
+        const matchSearch = w.name.toLowerCase().includes(searchQuery.toLowerCase()) || w.brand.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchGender && matchType && matchSearch;
+      });
+    }, [watches, filterGender, filterType, searchQuery]);
+
+    return (
+      <div className="pt-28 pb-20 px-4 max-w-7xl mx-auto">
+        <h1 className="text-4xl font-serif font-bold text-black dark:text-white mb-8 text-center uppercase tracking-widest">Каталог</h1>
+        
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar Filters */}
+          <div className="w-full md:w-64 space-y-8 bg-white dark:bg-[#111] p-6 rounded-2xl border border-gray-200 dark:border-white/10 h-fit sticky top-28">
+            <div>
+              <div className="flex items-center gap-2 text-black dark:text-white font-semibold mb-4 pb-2 border-b border-gray-200 dark:border-white/10">
+                <Search size={18} /> Іздеу
+              </div>
+              <input 
+                type="text" 
+                placeholder="Бренд немесе модель..." 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full p-3 rounded-xl bg-gray-100 dark:bg-black border border-gray-200 dark:border-white/10 text-sm focus:outline-none text-black dark:text-white"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 text-black dark:text-white font-semibold mb-4 pb-2 border-b border-gray-200 dark:border-white/10">
+                <Filter size={18} /> Жыныс
+              </div>
+              <div className="space-y-2">
+                {['all', 'male', 'female', 'unisex'].map(g => (
+                  <label key={g} className="flex items-center gap-3 cursor-pointer group">
+                    <input type="radio" name="gender" checked={filterGender === g} onChange={() => setFilterGender(g)} className="accent-yellow-600 w-4 h-4" />
+                    <span className={`text-sm capitalize group-hover:text-yellow-600 transition-colors ${filterGender === g ? 'text-black dark:text-white font-semibold' : 'text-gray-500'}`}>
+                      {g === 'all' ? 'Барлығы' : g === 'male' ? 'Ерлер' : g === 'female' ? 'Әйелдер' : 'Унисекс'}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 text-black dark:text-white font-semibold mb-4 pb-2 border-b border-gray-200 dark:border-white/10">
+                <WatchIcon size={18} /> Түрі
+              </div>
+              <div className="space-y-2">
+                {['all', 'mechanical', 'digital', 'sport', 'luxury', 'casual'].map(t => (
+                  <label key={t} className="flex items-center gap-3 cursor-pointer group">
+                    <input type="radio" name="type" checked={filterType === t} onChange={() => setFilterType(t)} className="accent-yellow-600 w-4 h-4" />
+                    <span className={`text-sm capitalize group-hover:text-yellow-600 transition-colors ${filterType === t ? 'text-black dark:text-white font-semibold' : 'text-gray-500'}`}>
+                      {t === 'all' ? 'Барлығы' : t}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Product Grid */}
+          <div className="flex-1">
+            <div className="mb-6 flex justify-between items-center text-sm text-gray-500">
+              <span>{filteredWatches.length} сағат табылды</span>
+            </div>
+            {filteredWatches.length === 0 ? (
+              <div className="text-center py-20 bg-white dark:bg-[#111] rounded-2xl border border-gray-200 dark:border-white/10">
+                <p className="text-xl text-gray-500">Сағат табылмады</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredWatches.map(w => <ProductCard key={w.id} watch={w} />)}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const ProductDetailView = () => {
+    if (!selectedProduct) return null;
+    const watch = selectedProduct;
+    const isFav = favorites.some(f => f.id === watch.id);
+
+    return (
+      <div className="pt-28 pb-20 px-4 max-w-7xl mx-auto">
+        <button onClick={() => navigateTo('shop')} className="mb-8 text-sm uppercase tracking-widest text-gray-500 hover:text-black dark:hover:text-white flex items-center gap-2 transition-colors">
+          &larr; Артқа қайту
+        </button>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="relative h-[500px] md:h-[600px] bg-white dark:bg-[#0a0a0a] rounded-3xl p-10 flex items-center justify-center border border-gray-100 dark:border-white/5">
+            <img src={watch.image} alt={watch.name} className="max-h-full max-w-full object-contain drop-shadow-2xl animate-pulse-slow" />
+            <div className="absolute top-6 left-6 flex gap-2">
+              <span className="bg-black text-white dark:bg-white dark:text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{watch.brand}</span>
+              <span className="bg-yellow-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{watch.type}</span>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center text-yellow-500">
+                <Star size={18} fill="currentColor" />
+                <span className="ml-1 text-sm font-semibold text-black dark:text-white">{watch.rating} / 5.0</span>
+              </div>
+              <span className={`text-sm font-semibold ${watch.stock > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {watch.stock > 0 ? `Қоймада бар (${watch.stock})` : 'Қоймада жоқ'}
+              </span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl font-serif font-bold text-black dark:text-white mb-2">{watch.name}</h1>
+            <p className="text-xl text-gray-500 dark:text-gray-400 mb-6 font-mono">{watch.model}</p>
+            
+            <div className="text-3xl font-bold text-black dark:text-white mb-8 border-b border-gray-200 dark:border-white/10 pb-8">
+              {formatPrice(watch.price)}
+            </div>
+
+            <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-8 font-light text-lg">
+              {watch.description}
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 mb-10">
+              <div className="p-4 bg-gray-50 dark:bg-[#111] rounded-2xl border border-gray-100 dark:border-white/5">
+                <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Жынысы</span>
+                <span className="font-semibold text-black dark:text-white capitalize">{watch.gender}</span>
+              </div>
+              <div className="p-4 bg-gray-50 dark:bg-[#111] rounded-2xl border border-gray-100 dark:border-white/5">
+                <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Стиль</span>
+                <span className="font-semibold text-black dark:text-white capitalize">{watch.type}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={() => handleAddToCart(watch)} 
+                disabled={watch.stock === 0}
+                className="flex-1 bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-semibold uppercase tracking-widest hover:bg-yellow-600 dark:hover:bg-yellow-500 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Себетке қосу
+              </button>
+              <button 
+                onClick={() => toggleFavorite(watch)}
+                className="w-16 h-16 flex items-center justify-center border border-gray-300 dark:border-white/20 rounded-full text-black dark:text-white hover:border-yellow-600 hover:text-yellow-600 transition-colors"
+              >
+                <Heart size={24} fill={isFav ? "currentColor" : "none"} className={isFav ? "text-red-500" : ""} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const CartView = () => {
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    const handleRemove = (id) => {
+      setCart(cart.filter(item => item.id !== id));
+    };
+
+    return (
+      <div className="pt-28 pb-20 px-4 max-w-5xl mx-auto min-h-screen">
+        <h1 className="text-3xl font-serif font-bold text-black dark:text-white mb-8 border-b border-gray-200 dark:border-white/10 pb-4">Себет ({cart.length})</h1>
+        
+        {cart.length === 0 ? (
+          <div className="text-center py-20">
+            <ShoppingCart size={64} className="mx-auto text-gray-300 dark:text-gray-700 mb-6" />
+            <h2 className="text-2xl text-gray-500 font-light mb-6">Себет бос</h2>
+            <button onClick={() => navigateTo('shop')} className="px-8 py-3 bg-black dark:bg-white text-white dark:text-black rounded-full uppercase tracking-widest text-sm font-semibold">
+              Каталогқа өту
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="lg:col-span-2 space-y-6">
+              {cart.map(item => (
+                <div key={item.id} className="flex gap-6 bg-white dark:bg-[#111] p-4 rounded-2xl border border-gray-200 dark:border-white/10 relative">
+                  <div className="w-24 h-24 bg-gray-50 dark:bg-black rounded-xl p-2 flex-shrink-0">
+                    <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex-1 py-2">
+                    <h3 className="font-bold text-black dark:text-white">{item.name}</h3>
+                    <p className="text-sm text-gray-500 mb-2">{item.brand}</p>
+                    <div className="text-lg font-semibold text-black dark:text-white">{formatPrice(item.price)}</div>
+                  </div>
+                  <div className="flex flex-col justify-between items-end py-2">
+                    <button onClick={() => handleRemove(item.id)} className="text-gray-400 hover:text-red-500"><X size={20}/></button>
+                    <span className="text-sm font-semibold text-gray-500 bg-gray-100 dark:bg-[#222] px-3 py-1 rounded-lg">x{item.quantity}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white dark:bg-[#111] p-8 rounded-3xl border border-gray-200 dark:border-white/10 h-fit sticky top-28">
+              <h2 className="text-xl font-bold text-black dark:text-white mb-6 uppercase tracking-widest">Тапсырыс сомасы</h2>
+              <div className="space-y-4 mb-6 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex justify-between"><span>Тауарлар құны:</span> <span>{formatPrice(total)}</span></div>
+                <div className="flex justify-between"><span>Жеткізу:</span> <span>Тегін</span></div>
+              </div>
+              <div className="flex justify-between items-center text-xl font-bold text-black dark:text-white mb-8 pt-6 border-t border-gray-200 dark:border-white/10">
+                <span>Жалпы:</span>
+                <span>{formatPrice(total)}</span>
+              </div>
+              <button 
+                onClick={() => {
+                  if(!currentUser) {
+                    setIsAuthModalOpen(true);
+                  } else {
+                    navigateTo('checkout');
+                  }
+                }} 
+                className="w-full bg-yellow-600 hover:bg-yellow-500 text-white py-4 rounded-xl font-bold uppercase tracking-widest transition-colors shadow-lg shadow-yellow-500/30"
+              >
+                Төлем жасау
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const CheckoutView = () => {
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const [paymentMethod, setPaymentMethod] = useState('kaspi');
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const handlePayment = (e) => {
+      e.preventDefault();
+      setIsProcessing(true);
+      setTimeout(() => {
+        setIsProcessing(false);
+        const newOrder = {
+          id: 'ORD-' + Math.floor(Math.random() * 100000),
+          date: new Date().toLocaleDateString(),
+          total,
+          items: [...cart],
+          status: 'Өңделуде (Processing)',
+          method: paymentMethod
+        };
+        setOrders([newOrder, ...orders]);
+        setCart([]);
+        alert('Тапсырыс сәтті қабылданды!');
+        navigateTo('profile');
+      }, 2000);
+    };
+
+    return (
+      <div className="pt-28 pb-20 px-4 max-w-3xl mx-auto min-h-screen">
+        <h1 className="text-3xl font-serif font-bold text-black dark:text-white mb-8 text-center">Төлем беті</h1>
+        
+        <form onSubmit={handlePayment} className="space-y-8 bg-white dark:bg-[#111] p-8 rounded-3xl border border-gray-200 dark:border-white/10 shadow-xl">
+          <div>
+            <h3 className="text-xl font-bold text-black dark:text-white mb-4">Жеткізу мәліметтері</h3>
+            <div className="space-y-4">
+              <input type="text" placeholder="Толық мекен-жай (Қала, Көше, Үй)" required className="w-full p-4 rounded-xl bg-gray-50 dark:bg-black border border-gray-200 dark:border-white/10 text-black dark:text-white focus:outline-none focus:border-yellow-500" />
+              <input type="tel" placeholder="Байланыс телефоны" defaultValue={currentUser?.phone || ''} required className="w-full p-4 rounded-xl bg-gray-50 dark:bg-black border border-gray-200 dark:border-white/10 text-black dark:text-white focus:outline-none focus:border-yellow-500" />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-bold text-black dark:text-white mb-4">Төлем тәсілі</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div 
+                onClick={() => setPaymentMethod('kaspi')}
+                className={`p-4 rounded-xl border-2 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'kaspi' ? 'border-[#F14635] bg-[#F14635]/10' : 'border-gray-200 dark:border-white/10'}`}
+              >
+                <div className="text-xl font-bold text-[#F14635]">Kaspi QR</div>
+              </div>
+              <div 
+                onClick={() => setPaymentMethod('card')}
+                className={`p-4 rounded-xl border-2 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'card' ? 'border-yellow-500 bg-yellow-500/10' : 'border-gray-200 dark:border-white/10'}`}
+              >
+                <div className="text-xl font-bold text-black dark:text-white">Банк картасы</div>
+              </div>
+            </div>
+          </div>
+
+          {paymentMethod === 'kaspi' && (
+            <div className="flex flex-col items-center justify-center py-8 bg-gray-50 dark:bg-black rounded-xl border border-gray-200 dark:border-white/10">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="Kaspi QR Mock" className="w-40 h-40 mb-4 bg-white p-2 rounded-lg" />
+              <p className="text-sm text-gray-500">Kaspi қосымшасы арқылы сканерлеңіз</p>
+            </div>
+          )}
+
+          {paymentMethod === 'card' && (
+            <div className="space-y-4">
+              <input type="text" placeholder="Карта нөмірі" required className="w-full p-4 rounded-xl bg-gray-50 dark:bg-black border border-gray-200 dark:border-white/10 text-black dark:text-white focus:outline-none focus:border-yellow-500" />
+              <div className="flex gap-4">
+                <input type="text" placeholder="MM/YY" required className="w-1/2 p-4 rounded-xl bg-gray-50 dark:bg-black border border-gray-200 dark:border-white/10 text-black dark:text-white focus:outline-none focus:border-yellow-500" />
+                <input type="text" placeholder="CVV" required className="w-1/2 p-4 rounded-xl bg-gray-50 dark:bg-black border border-gray-200 dark:border-white/10 text-black dark:text-white focus:outline-none focus:border-yellow-500" />
+              </div>
+            </div>
+          )}
+
+          <div className="pt-6 border-t border-gray-200 dark:border-white/10">
+            <button type="submit" disabled={isProcessing} className="w-full py-4 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold uppercase tracking-widest flex justify-center items-center disabled:opacity-70">
+              {isProcessing ? 'Өңделуде...' : `${formatPrice(total)} төлеу`}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  };
+
+  const UserProfileView = () => (
+    <div className="pt-28 pb-20 px-4 max-w-7xl mx-auto min-h-screen">
+      <div className="flex justify-between items-center mb-10 border-b border-gray-200 dark:border-white/10 pb-6">
+        <h1 className="text-3xl font-serif font-bold text-black dark:text-white">Жеке Кабинет</h1>
+        <button onClick={() => { setCurrentUser(null); navigateTo('home'); }} className="flex items-center gap-2 text-red-500 hover:text-red-600 px-4 py-2 bg-red-500/10 rounded-lg font-semibold">
+          <LogOut size={18} /> Шығу
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-1 space-y-6">
+          <div className="bg-white dark:bg-[#111] p-6 rounded-2xl border border-gray-200 dark:border-white/10">
+            <div className="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center text-3xl font-bold text-gray-500 dark:text-gray-400 mb-4">
+              {currentUser.name.charAt(0).toUpperCase()}
+            </div>
+            <h2 className="text-xl font-bold text-black dark:text-white">{currentUser.name}</h2>
+            <p className="text-gray-500 text-sm mb-4">{currentUser.email}</p>
+            <div className="pt-4 border-t border-gray-200 dark:border-white/10 flex flex-col gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Роль: <strong className="uppercase text-yellow-600">{currentUser.role}</strong></span>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-[#111] p-6 rounded-2xl border border-gray-200 dark:border-white/10">
+            <h3 className="font-bold text-black dark:text-white mb-4 flex items-center gap-2"><Heart size={18} className="text-red-500"/> Таңдаулы сағаттар ({favorites.length})</h3>
+            <div className="space-y-4">
+              {favorites.map(f => (
+                <div key={f.id} className="flex items-center gap-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 p-2 rounded-lg" onClick={() => navigateTo('product', f)}>
+                  <img src={f.image} alt={f.name} className="w-12 h-12 object-contain bg-gray-100 dark:bg-black rounded-md" />
+                  <div>
+                    <div className="text-sm font-semibold text-black dark:text-white">{f.name}</div>
+                    <div className="text-xs text-gray-500">{formatPrice(f.price)}</div>
+                  </div>
+                </div>
+              ))}
+              {favorites.length === 0 && <p className="text-sm text-gray-500">Әзірге бос</p>}
+            </div>
+          </div>
+        </div>
+
+        <div className="md:col-span-2">
+          <div className="bg-white dark:bg-[#111] p-8 rounded-3xl border border-gray-200 dark:border-white/10">
+            <h3 className="text-2xl font-bold text-black dark:text-white mb-6 flex items-center gap-3"><Package className="text-yellow-500"/> Менің Тапсырыстарым</h3>
+            
+            {orders.length === 0 ? (
+              <p className="text-gray-500 py-10 text-center bg-gray-50 dark:bg-black rounded-xl">Сізде әлі тапсырыс жоқ.</p>
+            ) : (
+              <div className="space-y-6">
+                {orders.map(order => (
+                  <div key={order.id} className="border border-gray-200 dark:border-white/10 rounded-2xl p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-2 h-full bg-yellow-500"></div>
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <div className="text-sm text-gray-500 mb-1">Заказ #{order.id} &bull; {order.date}</div>
+                        <div className="text-xl font-bold text-black dark:text-white">{formatPrice(order.total)}</div>
+                      </div>
+                      <span className="px-3 py-1 bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 rounded-full text-sm font-semibold border border-yellow-500/20">
+                        {order.status}
+                      </span>
+                    </div>
+
+                    {/* Tracking UI */}
+                    <div className="mb-6 relative">
+                      <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 dark:bg-gray-800 -translate-y-1/2 z-0"></div>
+                      <div className="absolute top-1/2 left-0 w-1/3 h-1 bg-yellow-500 -translate-y-1/2 z-0"></div>
+                      <div className="flex justify-between relative z-10">
+                        <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-white"><CheckCircle size={14}/></div>
+                        <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-white"><CheckCircle size={14}/></div>
+                        <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 border-2 border-white dark:border-black"></div>
+                        <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 border-2 border-white dark:border-black"></div>
+                      </div>
+                      <div className="flex justify-between text-[10px] uppercase tracking-wider text-gray-500 mt-2 font-semibold">
+                        <span>Төленді</span>
+                        <span>Өңделуде</span>
+                        <span>Жөнелтілді</span>
+                        <span>Жеткізілді</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-white/5">
+                      {order.items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-300">{item.name} (x{item.quantity})</span>
+                          <span className="text-black dark:text-white font-semibold">{formatPrice(item.price * item.quantity)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const AdminDashboard = () => {
+    const [adminView, setAdminView] = useState('overview'); // overview, products, orders, users
+
+    const StatCard = ({ title, value, icon, trend }) => (
+      <div className="bg-white dark:bg-[#111] p-6 rounded-2xl border border-gray-200 dark:border-white/10">
+        <div className="flex justify-between items-start mb-4">
+          <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl text-yellow-600 dark:text-yellow-500">{icon}</div>
+          <span className="text-sm font-semibold text-green-500 flex items-center gap-1"><TrendingUp size={14}/> {trend}</span>
+        </div>
+        <div className="text-gray-500 text-sm mb-1">{title}</div>
+        <div className="text-3xl font-bold text-black dark:text-white">{value}</div>
+      </div>
+    );
+
+    return (
+      <div className="pt-24 pb-20 px-4 max-w-[1400px] mx-auto min-h-screen flex gap-8">
+        {/* Admin Sidebar */}
+        <div className="w-64 shrink-0 hidden md:block">
+          <div className="sticky top-28 space-y-2">
+            <h2 className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-4 px-4">Admin Menu</h2>
+            {[
+              { id: 'overview', label: 'Dashboard', icon: <TrendingUp size={18} /> },
+              { id: 'products', label: 'Сағаттарды басқару', icon: <WatchIcon size={18} /> },
+              { id: 'orders', label: 'Заказдар', icon: <Package size={18} /> },
+              { id: 'users', label: 'Клиенттер базасы', icon: <User size={18} /> },
+            ].map(item => (
+              <button 
+                key={item.id}
+                onClick={() => setAdminView(item.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${adminView === item.id ? 'bg-black text-white dark:bg-white dark:text-black font-semibold shadow-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'}`}
+              >
+                {item.icon} {item.label}
+              </button>
+            ))}
+            <button onClick={() => { setCurrentUser(null); navigateTo('home'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all mt-8 font-semibold">
+              <LogOut size={18} /> Шығу
+            </button>
+          </div>
+        </div>
+
+        {/* Admin Content */}
+        <div className="flex-1">
+          <div className="mb-8 flex justify-between items-center">
+            <h1 className="text-3xl font-serif font-bold text-black dark:text-white capitalize">
+              {adminView === 'overview' ? 'Admin Dashboard' : adminView}
+            </h1>
+            <div className="bg-gray-100 dark:bg-white/10 px-4 py-2 rounded-lg text-sm font-mono dark:text-white">Admin: {currentUser.name}</div>
+          </div>
+
+          {adminView === 'overview' && (
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard title="Жалпы табыс" value="₸ 12.5M" icon={<span className="font-bold">₸</span>} trend="+14%" />
+                <StatCard title="Белсенді заказдар" value={orders.length.toString()} icon={<Package/>} trend="+2%" />
+                <StatCard title="Сағаттар саны (Stock)" value={watches.length.toString()} icon={<WatchIcon/>} trend="0%" />
+                <StatCard title="Тіркелген клиенттер" value={(usersDb.length + 1).toString()} icon={<User/>} trend="+5%" />
+              </div>
+              
+              {/* Mock Chart Area */}
+              <div className="bg-white dark:bg-[#111] p-6 rounded-2xl border border-gray-200 dark:border-white/10 h-80 flex items-center justify-center flex-col">
+                <TrendingUp size={48} className="text-gray-200 dark:text-white/10 mb-4" />
+                <p className="text-gray-500 font-semibold uppercase tracking-widest text-sm">Сатылым аналитикасы (Chart Area)</p>
+              </div>
+            </div>
+          )}
+
+          {adminView === 'products' && (
+            <div className="bg-white dark:bg-[#111] rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5">
+                <h3 className="font-bold text-black dark:text-white">Базадағы сағаттар ({watches.length})</h3>
+                <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-semibold hover:bg-yellow-500">+ Жаңа сағат қосу</button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+                  <thead className="bg-gray-100 dark:bg-black/50 text-gray-700 dark:text-gray-300 uppercase">
+                    <tr>
+                      <th className="px-6 py-4">ID</th>
+                      <th className="px-6 py-4">Модель</th>
+                      <th className="px-6 py-4">Бағасы</th>
+                      <th className="px-6 py-4">Stock</th>
+                      <th className="px-6 py-4 text-right">Әрекет</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {watches.slice(0, 10).map((w, i) => ( // Show first 10 for demo
+                      <tr key={w.id} className="border-b border-gray-200 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5">
+                        <td className="px-6 py-4 font-mono">{w.id}</td>
+                        <td className="px-6 py-4 flex items-center gap-3">
+                          <img src={w.image} className="w-8 h-8 rounded-md bg-white object-contain" />
+                          <div><div className="text-black dark:text-white font-semibold">{w.name}</div><div className="text-xs">{w.brand}</div></div>
+                        </td>
+                        <td className="px-6 py-4">{formatPrice(w.price)}</td>
+                        <td className="px-6 py-4"><span className={`px-2 py-1 rounded-md text-xs font-bold ${w.stock > 5 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{w.stock} шт</span></td>
+                        <td className="px-6 py-4 text-right">
+                          <button className="text-yellow-600 hover:underline mr-3">Өзгерту</button>
+                          <button className="text-red-500 hover:underline">Өшіру</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {adminView === 'orders' && (
+            <div className="bg-white dark:bg-[#111] rounded-2xl border border-gray-200 dark:border-white/10 p-6 text-center">
+              <h3 className="font-bold text-black dark:text-white mb-4 text-left">Соңғы Тапсырыстар</h3>
+              {orders.length === 0 ? <p className="text-gray-500">Заказдар әлі түскен жоқ.</p> : (
+                 <div className="space-y-4">
+                  {orders.map(o => (
+                    <div key={o.id} className="flex justify-between items-center p-4 border border-gray-200 dark:border-white/10 rounded-xl text-left">
+                      <div>
+                        <div className="font-bold text-black dark:text-white">{o.id}</div>
+                        <div className="text-sm text-gray-500">{o.date} &bull; {formatPrice(o.total)}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <select className="bg-gray-100 dark:bg-black border border-gray-200 dark:border-white/10 rounded-lg px-3 py-1 text-sm text-black dark:text-white">
+                          <option>{o.status}</option>
+                          <option>Жөнелтілді</option>
+                          <option>Жеткізілді</option>
+                          <option>Отмена</option>
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                 </div>
+              )}
+            </div>
+          )}
+
+          {adminView === 'users' && (
+             <div className="bg-white dark:bg-[#111] rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden">
+               <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+                  <thead className="bg-gray-100 dark:bg-black/50 text-gray-700 dark:text-gray-300 uppercase">
+                    <tr><th className="px-6 py-4">Аты-жөні</th><th className="px-6 py-4">Email</th><th className="px-6 py-4">Телефон</th><th className="px-6 py-4">Роль</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-gray-200 dark:border-white/5 bg-yellow-50/50 dark:bg-yellow-900/10">
+                      <td className="px-6 py-4 font-bold text-black dark:text-white">Ramazan Omar (Admin)</td>
+                      <td className="px-6 py-4">{ADMIN_CREDENTIALS.username}</td>
+                      <td className="px-6 py-4">-</td>
+                      <td className="px-6 py-4"><span className="px-2 py-1 bg-yellow-500 text-white rounded text-xs font-bold">ADMIN</span></td>
+                    </tr>
+                    {usersDb.map((u, i) => (
+                      <tr key={i} className="border-b border-gray-200 dark:border-white/5">
+                        <td className="px-6 py-4 font-semibold text-black dark:text-white">{u.name}</td>
+                        <td className="px-6 py-4">{u.email}</td>
+                        <td className="px-6 py-4">{u.phone || '-'}</td>
+                        <td className="px-6 py-4"><span className="px-2 py-1 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-xs">USER</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+               </table>
+             </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const AboutView = () => (
+    <div className="pt-28 pb-20 px-4 max-w-4xl mx-auto text-center min-h-screen">
+      <h1 className="text-4xl font-serif font-bold text-black dark:text-white mb-8 uppercase tracking-widest">Біз Туралы</h1>
+      <div className="bg-white dark:bg-[#111] p-12 rounded-3xl border border-gray-200 dark:border-white/10 shadow-2xl">
+        <div className="w-20 h-20 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center mx-auto mb-6">
+          <WatchIcon size={40} />
+        </div>
+        <h2 className="text-3xl font-bold mb-6 text-black dark:text-white font-serif tracking-wider">RisaWatch</h2>
+        <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 leading-relaxed max-w-2xl mx-auto font-light">
+          RisaWatch — бұл жай ғана дүкен емес, бұл талғампаздық пен уақыттың қадірін білетіндерге арналған премиум кеңістік. Біз әлемдегі ең танымал әрі жоғары сапалы сағат брендтерін ұсынамыз.
+        </p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 text-left mt-12 pt-12 border-t border-gray-200 dark:border-white/10">
+          <div>
+            <h3 className="text-yellow-600 font-bold uppercase tracking-widest mb-4">Байланыс</h3>
+            <p className="text-black dark:text-white font-mono mb-2">📞 +7 778 745 81 28</p>
+            <p className="text-black dark:text-white font-mono mb-2">✉️ 7458128@mail.ru</p>
+            <p className="text-black dark:text-white font-mono">✉️ risawatch@mail.com</p>
+          </div>
+          <div>
+            <h3 className="text-yellow-600 font-bold uppercase tracking-widest mb-4">Мекен-жай</h3>
+            <p className="text-black dark:text-white mb-2">Қазақстан Республикасы,</p>
+            <p className="text-black dark:text-white">Алматы қаласы,</p>
+            <p className="text-gray-500 text-sm mt-2">risawatch.kz онлайн платформасы</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const Footer = () => (
+    <footer className="bg-black text-white py-16 px-4 border-t border-white/10">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div>
+          <div className="flex items-center gap-2 mb-6">
+            <WatchIcon size={24} className="text-yellow-500" />
+            <span className="text-2xl font-serif font-bold tracking-widest uppercase">RisaWatch</span>
+          </div>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6 font-light">
+            Жоғары сапалы премиум сағаттардың Қазақстандағы ресми дистрибьюторы. Уақытты бізбен бірге бағалаңыз.
+          </p>
+        </div>
+        <div>
+          <h4 className="font-bold uppercase tracking-widest mb-6 text-sm text-yellow-500">Каталог</h4>
+          <ul className="space-y-3 text-sm text-gray-400">
+            <li><button onClick={() => navigateTo('shop')} className="hover:text-white transition-colors">Ерлер сағаттары</button></li>
+            <li><button onClick={() => navigateTo('shop')} className="hover:text-white transition-colors">Әйелдер сағаттары</button></li>
+            <li><button onClick={() => navigateTo('shop')} className="hover:text-white transition-colors">Спорттық сағаттар</button></li>
+            <li><button onClick={() => navigateTo('shop')} className="hover:text-white transition-colors">Luxury коллекция</button></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-bold uppercase tracking-widest mb-6 text-sm text-yellow-500">Ақпарат</h4>
+          <ul className="space-y-3 text-sm text-gray-400">
+            <li><button onClick={() => navigateTo('about')} className="hover:text-white transition-colors">Біз туралы</button></li>
+            <li><button className="hover:text-white transition-colors">Жеткізу және төлеу</button></li>
+            <li><button className="hover:text-white transition-colors">Кепілдік</button></li>
+            <li><button className="hover:text-white transition-colors">Байланыс</button></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-bold uppercase tracking-widest mb-6 text-sm text-yellow-500">Байланыс</h4>
+          <ul className="space-y-3 text-sm text-gray-400 font-mono">
+            <li>+7 778 745 81 28</li>
+            <li>risawatch@mail.com</li>
+            <li>7458128@mail.ru</li>
+          </ul>
+        </div>
+      </div>
+      <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-white/10 text-center text-xs text-gray-500 uppercase tracking-widest">
+        &copy; {new Date().getFullYear()} RisaWatch.kz. Барлық құқықтар қорғалған.
+      </div>
+    </footer>
+  );
+
+  return (
+    <div className={`min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 overflow-x-hidden selection:bg-yellow-500 selection:text-white`}>
+      <Navbar />
+      
+      <main className="min-h-screen">
+        {currentView === 'home' && <HomeView />}
+        {currentView === 'shop' && <ShopView />}
+        {currentView === 'product' && <ProductDetailView />}
+        {currentView === 'cart' && <CartView />}
+        {currentView === 'checkout' && <CheckoutView />}
+        {currentView === 'profile' && <UserProfileView />}
+        {currentView === 'admin' && <AdminDashboard />}
+        {currentView === 'about' && <AboutView />}
+      </main>
+      
+      {currentView !== 'admin' && <Footer />}
+      
+      <AuthModal />
+      <AIChatbot />
+    </div>
+  );
+}
